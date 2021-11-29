@@ -3,16 +3,28 @@ const Promise = require('bluebird');
 const credentials = require('./credentials.json');
 
 const ROOT_URL = 'https://conversations.twilio.com/v1';
-const auth = 'Basic '+Buffer.from(`${credentials.aid}:${credentials.pwd}`).toString('base64');
-const doTwilioGet = url => request.get(url).set('Authorization', auth).send().then(r => r.body);
-const doTwilioPost = (url, data) => request.post(url).set('content-type','application/x-www-form-urlencoded').set('Authorization', auth).send(data).then(r => r.body).catch(err => {
-    console.log(err.response.body);
-})
+const auth = 'Basic ' + Buffer.from(`${credentials.aid}:${credentials.pwd}`).toString('base64');
+const sidAuth = 'Basic ' + Buffer.from(`${credentials.sid}:${credentials.token}`).toString('base64');
+const getTwilioUrl = url => {
+    if (url.startsWith('http')) return url;
+    return `${ROOT_URL}/${url}`;
+};
+const doTwilioGet = url => request.get(getTwilioUrl(url)).set('Authorization', auth).send().then(r => r.body);
+const doTwilioPost = (url, data, Auth=auth) => request.post(getTwilioUrl(url)).set('content-type', 'application/x-www-form-urlencoded').set('Authorization', Auth).send(data).then(r => r.body).catch(err => {
+    if (err.response)
+        console.log(err.response.body);
+    else
+        console.log(err);
+});
+
+const sendTextMsg = async (toNum, data) => {
+    const sid = credentials.sid;
+    return await doTwilioPost(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
+        `Body=${data}&From=%2B${credentials.twilioPhone}&To=%2B1${toNum}`, sidAuth);
+}
 async function test() {    
-    const convUrl = `${ROOT_URL}/Conversations`;
-    const r = await doTwilioGet(convUrl);
-    r.conversations.map(conv => {
-        console.log(`sid = ${conv.sid}`);
+    const r = await doTwilioGet('Conversations');
+    r.conversations.map(conv => {        
         console.log(conv)
     });
     const theConv = r.conversations[0];
@@ -34,6 +46,13 @@ async function testConv(conv) {
         console.log('part res')
         console.log(r)
     //}
+
+    //await doTwilioPost(`Users`,'Identity=testgg1')
+    //const chid = 'CH2fb401fd48ec400ea5826bb7925610a4';
+    ////await doTwilioPost(`Conversations/${chid}/Messages`, `Author=system&Body=testtest`);
+    
+    console.log(`send msg`);
+    //await sendTextMsg('4043989999','testtestdata')
 }
 
 test();
