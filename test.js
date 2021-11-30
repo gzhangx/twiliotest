@@ -76,8 +76,8 @@ async function testConv(conv) {
         console.log('left');
         console.log(thisConversation);
     });
-    conversationsClient.sendMessage('test')
-    return;
+    //conversationsClient.sendMessage('test')
+    
     const checkPartUrl = conv.links.participants;
     const parts = await doTwilioGet(checkPartUrl);
     console.log('conv parts')
