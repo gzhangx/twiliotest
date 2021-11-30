@@ -64,7 +64,18 @@ async function testConv(conv) {
     console.log(token.toJwt());
 
     const conversationsClient = await ConversationsClient.create(token.toJwt());
+    conversationsClient.on("connectionStateChanged", (state) => {
+        console.log(`convclient state ${state}`);        
+    });
+    conversationsClient.on("conversationJoined", (conversation) => {
+        console.log('joined');
+        console.log(conversation);
 
+    });
+    conversationsClient.on("conversationLeft", (thisConversation) => {
+        console.log('left');
+        console.log(thisConversation);
+    });
     const checkPartUrl = conv.links.participants;
     const parts = await doTwilioGet(checkPartUrl);
     console.log('conv parts')
