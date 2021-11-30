@@ -77,9 +77,9 @@ async function testConv(conv) {
         console.log(thisConversation);
     });
     console.log('before create conv');
-    const cnv = await conversationsClient.createConversation();
-    cnv.sendMessage('testtttt');
+    const cnv = await conversationsClient.createConversation();    
     console.log('after create conv');
+    await cnv.sendMessage('testtttt');
     return;
     //conversationsClient.sendMessage('test')
     
