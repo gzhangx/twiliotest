@@ -4,6 +4,8 @@ const credentials = require('./credentials.json');
 const twilio = require('twilio');
 const AccessToken = require('twilio').jwt.AccessToken;
 const ChatGrant = AccessToken.ChatGrant;
+const twilioConversionsImp = require('@twilio/conversations');
+const ConversationsClient = twilioConversionsImp.Client;
 
 const ROOT_URL = 'https://conversations.twilio.com/v1';
 const auth = 'Basic ' + Buffer.from(`${credentials.aid}:${credentials.pwd}`).toString('base64');
@@ -61,6 +63,8 @@ async function testConv(conv) {
     // Serialize the token to a JWT string
     console.log(token.toJwt());
 
+    const conversationsClient = await ConversationsClient.create(token.toJwt());
+
     const checkPartUrl = conv.links.participants;
     const parts = await doTwilioGet(checkPartUrl);
     console.log('conv parts')
@@ -69,6 +73,7 @@ async function testConv(conv) {
     console.log(parts.participants.length)
     console.log(checkPartUrl);
 
+    
     const chid = parts.participants[0].conversation_sid;
     await doTwilioPost(`Conversations/${chid}/Messages`, `Author=${identity}&Body=testtest`);
     return;
