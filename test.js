@@ -76,7 +76,10 @@ async function testConv(conv) {
         console.log('left');
         console.log(thisConversation);
     });
+    console.log('before create conv');
     await conversationsClient.createConversation();
+    console.log('after create conv');
+    return;
     //conversationsClient.sendMessage('test')
     
     const checkPartUrl = conv.links.participants;
