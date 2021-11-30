@@ -1,6 +1,9 @@
 const request = require('superagent');
 const Promise = require('bluebird');
 const credentials = require('./credentials.json');
+const twilio = require('twilio');
+const AccessToken = require('twilio').jwt.AccessToken;
+const ChatGrant = AccessToken.ChatGrant;
 
 const ROOT_URL = 'https://conversations.twilio.com/v1';
 const auth = 'Basic ' + Buffer.from(`${credentials.aid}:${credentials.pwd}`).toString('base64');
@@ -33,13 +36,42 @@ async function test() {
 
 async function testConv(conv) {
     if (!conv) return;
+    const twilioAccountSid = credentials.sid; //'ACxxxxxxxxxx';
+    const twilioApiKey = credentials.aid; //'SKxxxxxxxxxx';
+    const twilioApiSecret = credentials.pwd;
+
+    // Used specifically for creating Chat tokens
+    const serviceSid = conv.chat_service_sid; //'ISxxxxxxxxxxxxx';
+    const identity = 'gzhang1@example.com';
+    const chatGrant = new ChatGrant({
+        serviceSid: serviceSid,
+    });
+
+    // Create an access token which we will sign and return to the client,
+    // containing the grant we just created
+    const token = new AccessToken(
+        twilioAccountSid,
+        twilioApiKey,
+        twilioApiSecret,
+        { identity: identity }
+    );
+
+    token.addGrant(chatGrant);
+
+    // Serialize the token to a JWT string
+    console.log(token.toJwt());
+
     const checkPartUrl = conv.links.participants;
     const parts = await doTwilioGet(checkPartUrl);
     console.log('conv parts')
     console.log(parts);
     console.log(parts.participants);
     console.log(parts.participants.length)
-    console.log(checkPartUrl)
+    console.log(checkPartUrl);
+
+    const chid = parts.participants[0].conversation_sid;
+    await doTwilioPost(`Conversations/${chid}/Messages`, `Author=${identity}&Body=testtest`);
+    return;
     //if (parts.participants.length === 0) {
         //%2B
     const r = await doTwilioPost(checkPartUrl, `MessagingBinding.Address=%2B1${credentials.myPhone}&MessagingBinding.ProxyAddress=%2B${credentials.twilioPhone}`)
