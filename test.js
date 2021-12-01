@@ -42,16 +42,22 @@ async function getAllMessages(conversions) {
         const serviceSid = conv.chat_service_sid; //'ISxxxxxxxxxxxxx';
 
         const checkPartUrl1 = conv.links.participants;
+        console.log(`get parts ${checkPartUrl1}`);
         const parts1 = await doTwilioGet(checkPartUrl1);
         await Promise.map(parts1.participants, async part => {
             const chid1 = part.conversation_sid;
             console.log(`Services/${serviceSid}/Conversations/${chid1}/Messages`);
+            console.log(part);
+            //if (!part.identity) {
+                ///await doTwilioPost(part.url, `Identity=testid1`);
+            //}
             const msgs = await doTwilioGet(`Services/${serviceSid}/Conversations/${chid1}/Messages`);
             return console.log(msgs.messages);
         });
         
         
     }, { concurrency: 1 });
+    console.log(`all conversion count ${conversions.length}`);
 }
 
 
