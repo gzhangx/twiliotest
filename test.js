@@ -7,6 +7,14 @@ const ChatGrant = AccessToken.ChatGrant;
 const twilioConversionsImp = require('@twilio/conversations');
 const ConversationsClient = twilioConversionsImp.Client;
 
+async function deleteAll() {
+    const r = await doTwilioGet('Conversations');
+    await Promise.map(r.conversations, async conv => {                
+        const checkPartUrl1 = conv.links.participants;            
+        await doTwilloDel(conv.url);           
+    });
+}
+
 async function generateToken(identity) {
     const twilioAccountSid = credentials.sid; //'ACxxxxxxxxxx';
     const twilioApiKey = credentials.aid; //'SKxxxxxxxxxx';
@@ -34,7 +42,9 @@ async function generateToken(identity) {
 }
 
 async function testAll() {
-    const token = await generateToken('ggtestid');
+    await deleteAll();
+    const tkIdentity = 'ggtestid';
+    const token = await generateToken(tkIdentity);
     const client = new twilioConversionsImp.Client(token);
     console.log(token);
     await new Promise(resolve => {
@@ -63,13 +73,33 @@ async function testAll() {
     })
     conv.on('messageAdded', msg => {
         console.log('message added');
-        console.log(msg);
+        //console.log(msg); //conversation,  state
+        console.log(`${msg.state.author}: ${msg.state.timestamp} ${msg.state.subject||''} ${msg.state.body}`)
     });
     const addPartRes = await conv.addNonChatParticipant('+' + credentials.twilioPhone, '+1' + credentials.myPhone);
-    console.log(addPartRes);
-    
+    console.log(`Addpart res=${addPartRes.sid}`)
+        //account_sid: 'AC0aa097
+        //chat_service_sid: 'IS020154fc6
+        //conversation_sid: 'CHe79897e3d
+        //role_sid: 'RL7d38e296d0924498b
+        //sid: 'MB2b17a9203b644c
+        //date_created: '2021-12-01T20:58:29.243Z',
+        //date_updated: '2021-12-01T20:58:29.243Z',
+        //identity: null,
+        //messaging_binding: {
+            //type: 'sms',
+            //    address: '+1xxxx',
+            //        proxy_address: '+1xxxx'
+        //},
+        //url: 'https://aim.us1.twilio.com/Client/v2/Services/IS020154fc64564f8aa216d34ee162e4ef/Conversations/CHe79897e3d3d2413689cce65754dbfca6/Participants/MB2b17a9203b644cedaa5fdd2b248b8c7c',
+        //    links: {
+        //    conversation: 'https://aim.us1.twilio.com/Client/v2/Services/IS020154fc64564f8aa216d34ee162e4ef/Conversations/CHe79897e3d3d2413689cce65754dbfca6'
+        //}
+    const addres = await conv.add(tkIdentity);    
+    console.log(`AddpartToConvo res=${addres.sid}`);
+    await conv.sendMessage('testtest')
 }
-return testAll();
+
 const showOldMessages = false;
 
 const ROOT_URL = 'https://conversations.twilio.com/v1';
@@ -87,6 +117,8 @@ const doTwilioPost = (url, data, Auth=auth) => request.post(getTwilioUrl(url)).s
     else
         console.log(err);
 });
+
+return testAll();
 
 const sendTextMsg = async (toNum, data) => {
     const sid = credentials.sid;
