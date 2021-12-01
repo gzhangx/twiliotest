@@ -46,12 +46,16 @@ async function testAll() {
         });
     });
     console.log('client ready');
-    
-    await (await client.getConversationBySid('CH6ffef5a5d5be401a8ae12a62a97c76ec')).delete()
-    const conv = await client.getConversationByUniqueName('gguniqName') || await client.createConversation({
-        friendlyName: 'ggfreiendlyname',
-        uniqueName: 'gguniqName',
-    });
+        
+    let conv = null;
+    try {
+        conv = await client.getConversationByUniqueName('gguniqName');
+    } catch {
+        conv = await client.createConversation({
+            friendlyName: 'ggfreiendlyname',
+            uniqueName: 'gguniqName',
+        });
+    }
     
     console.log(conv.sid);
     conv.on('participantJoined', prt => {
@@ -61,7 +65,8 @@ async function testAll() {
         console.log('message added');
         console.log(msg);
     });
-    await conv.addNonChatParticipant('+'+credentials.twilioPhone, '+1'+credentials.myPhone);
+    const addPartRes = await conv.addNonChatParticipant('+' + credentials.twilioPhone, '+1' + credentials.myPhone);
+    console.log(addPartRes);
     
 }
 return testAll();
