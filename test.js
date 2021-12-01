@@ -14,6 +14,7 @@ const getTwilioUrl = url => {
     if (url.startsWith('http')) return url;
     return `${ROOT_URL}/${url}`;
 };
+const doTwilloDel = url => request.del(getTwilioUrl(url)).set('Authorization', auth).send().then(r => r.body)
 const doTwilioGet = url => request.get(getTwilioUrl(url)).set('Authorization', auth).send().then(r => r.body);
 const doTwilioPost = (url, data, Auth=auth) => request.post(getTwilioUrl(url)).set('content-type', 'application/x-www-form-urlencoded').set('Authorization', Auth).send(data).then(r => r.body).catch(err => {
     if (err.response)
@@ -41,9 +42,13 @@ async function getAllMessages(conversions) {
     await Promise.map(conversions, async conv => {
         const serviceSid = conv.chat_service_sid; //'ISxxxxxxxxxxxxx';
 
-        const checkPartUrl1 = conv.links.participants;
-        console.log(`get parts ${checkPartUrl1}`);
+        const checkPartUrl1 = conv.links.participants;        
         const parts1 = await doTwilioGet(checkPartUrl1);
+        console.log(`get parts ${checkPartUrl1} ${parts1.participants.length}`);
+        //if (!parts1.participants.length) {
+        //    console.log(conv.url)
+        //    await doTwilloDel(conv.url);
+        //}
         await Promise.map(parts1.participants, async part => {
             const chid1 = part.conversation_sid;
             console.log(`Services/${serviceSid}/Conversations/${chid1}/Messages`);
