@@ -41,9 +41,14 @@ async function generateToken(identity) {
     return token.toJwt();
 }
 
-async function testAll() {
-    await deleteAll();
-    const tkIdentity = 'ggtestid';
+function fixPhone(phone) {
+    if (phone.length == 10) return `+1${phone}`;
+    if (phone.length == 11) return `+${phone}`;
+    return phone;
+}
+async function testAll(phone) {
+    //await deleteAll();
+    const tkIdentity = `GGID${phone}`;
     const token = await generateToken(tkIdentity);
     const client = new twilioConversionsImp.Client(token);
     console.log(token);
@@ -58,12 +63,14 @@ async function testAll() {
     console.log('client ready');
         
     let conv = null;
+    let alreadyExists = false;
     try {
-        conv = await client.getConversationByUniqueName('gguniqName');
+        conv = await client.getConversationByUniqueName(tkIdentity);
+        alreadyExists = true;
     } catch {
         conv = await client.createConversation({
             friendlyName: 'ggfreiendlyname',
-            uniqueName: 'gguniqName',
+            uniqueName: tkIdentity,
         });
     }
     
@@ -76,8 +83,13 @@ async function testAll() {
         //console.log(msg); //conversation,  state
         console.log(`${msg.state.author}: ${msg.state.timestamp} ${msg.state.subject||''} ${msg.state.body}`)
     });
-    const addPartRes = await conv.addNonChatParticipant('+' + credentials.twilioPhone, '+1' + credentials.myPhone);
-    console.log(`Addpart res=${addPartRes.sid}`)
+    //const allParts = await conv.getParticipants();
+    //console.log(allParts.map(p=>p.state))
+    //if (!tkIdentity)
+    {
+        const addPartRes = await conv.addNonChatParticipant(fixPhone(credentials.twilioPhone), fixPhone(phone));
+        console.log(`Addpart res=${addPartRes.sid}`);
+    }
         //account_sid: 'AC0aa097
         //chat_service_sid: 'IS020154fc6
         //conversation_sid: 'CHe79897e3d
@@ -95,9 +107,12 @@ async function testAll() {
         //    links: {
         //    conversation: 'https://aim.us1.twilio.com/Client/v2/Services/IS020154fc64564f8aa216d34ee162e4ef/Conversations/CHe79897e3d3d2413689cce65754dbfca6'
         //}
-    const addres = await conv.add(tkIdentity);    
-    console.log(`AddpartToConvo res=${addres.sid}`);
-    await conv.sendMessage('testtest')
+    //if (!tkIdentity)
+    {
+        const addres = await conv.add(tkIdentity);
+        console.log(`AddpartToConvo res=${addres.sid}`);
+    }
+    //await conv.sendMessage('testtest1')
 }
 
 const showOldMessages = false;
@@ -118,7 +133,7 @@ const doTwilioPost = (url, data, Auth=auth) => request.post(getTwilioUrl(url)).s
         console.log(err);
 });
 
-return testAll();
+return testAll(credentials.myPhone);
 
 const sendTextMsg = async (toNum, data) => {
     const sid = credentials.sid;
