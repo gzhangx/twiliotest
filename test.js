@@ -4,8 +4,7 @@ const credentials = require('./credentials.json');
 const twilio = require('twilio');
 const AccessToken = require('twilio').jwt.AccessToken;
 const ChatGrant = AccessToken.ChatGrant;
-const twilioConversionsImp = require('@twilio/conversations');
-const ConversationsClient = twilioConversionsImp.Client;
+
 
 const ROOT_URL = 'https://conversations.twilio.com/v1';
 const auth = 'Basic ' + Buffer.from(`${credentials.aid}:${credentials.pwd}`).toString('base64');
@@ -29,15 +28,36 @@ const sendTextMsg = async (toNum, data) => {
 }
 async function test() {    
     const r = await doTwilioGet('Conversations');
-    r.conversations.map(conv => {        
-        console.log(conv)
-    });
+    //r.conversations.map(conv => {        
+    //    console.log(conv)
+    //});
+    return await getAllMessages(r.conversations);
     const theConv = r.conversations[0];
     await testConv(theConv);
 }
 
+async function getAllMessages(conversions) {
+    await Promise.map(conversions, async conv => {
+        const serviceSid = conv.chat_service_sid; //'ISxxxxxxxxxxxxx';
+
+        const checkPartUrl1 = conv.links.participants;
+        const parts1 = await doTwilioGet(checkPartUrl1);
+        await Promise.map(parts1.participants, async part => {
+            const chid1 = part.conversation_sid;
+            console.log(`Services/${serviceSid}/Conversations/${chid1}/Messages`);
+            const msgs = await doTwilioGet(`Services/${serviceSid}/Conversations/${chid1}/Messages`);
+            return console.log(msgs.messages);
+        });
+        
+        
+    }, { concurrency: 1 });
+}
+
+
 async function testConv(conv) {
     if (!conv) return;
+    const twilioConversionsImp = require('@twilio/conversations');
+    const ConversationsClient = twilioConversionsImp.Client;
     const twilioAccountSid = credentials.sid; //'ACxxxxxxxxxx';
     const twilioApiKey = credentials.aid; //'SKxxxxxxxxxx';
     const twilioApiSecret = credentials.pwd;
