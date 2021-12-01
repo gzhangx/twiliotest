@@ -4,7 +4,7 @@ const credentials = require('./credentials.json');
 const twilio = require('twilio');
 const AccessToken = require('twilio').jwt.AccessToken;
 const ChatGrant = AccessToken.ChatGrant;
-
+const twilioConversionsImp1 = require('@twilio/conversations');
 
 const ROOT_URL = 'https://conversations.twilio.com/v1';
 const auth = 'Basic ' + Buffer.from(`${credentials.aid}:${credentials.pwd}`).toString('base64');
