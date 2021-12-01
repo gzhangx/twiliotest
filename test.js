@@ -33,7 +33,7 @@ async function test() {
     //r.conversations.map(conv => {        
     //    console.log(conv)
     //});
-    return await getAllMessages(r.conversations);
+    await getAllMessages(r.conversations);
     const theConv = r.conversations[0];
     await testConv(theConv);
 }
@@ -94,23 +94,65 @@ async function testConv(conv) {
     // Serialize the token to a JWT string
     console.log(token.toJwt());
 
-    const conversationsClient = await ConversationsClient.create(token.toJwt());
+    const conversationsClient = new ConversationsClient(token.toJwt());
     conversationsClient.on("connectionStateChanged", (state) => {
         console.log(`convclient state ${state}`);        
     });
-    conversationsClient.on("conversationJoined", (conversation) => {
+    conversationsClient.on("conversationJoined", async (conversation) => {
         console.log('joined');
-        console.log(conversation);
+        conversation.on('messageAdded conversation', msg => {
+            console.log(`message added`);
+            console.log(Object.keys(msg));
+            console.log(msg.state)
+        })
+        conversation.on('updated conversation', evn => {
+            console.log('updated');
+            console.log(Object.keys(evn));
+            console.log(evn.updateReasons);
+        })
+        //console.log(conversation);
+        const sendRes = await conversation.prepareMessage()
+            .setBody('Hello from conversation')
+            .setAttributes({ foo: 'bar' })
+            .build()
+            .send();
 
+        console.log(sendRes)
     });
     conversationsClient.on("conversationLeft", (thisConversation) => {
         console.log('left');
         console.log(thisConversation);
     });
-    console.log('before create conv');
-    const cnv = await conversationsClient.createConversation();    
-    console.log('after create conv');
-    await cnv.sendMessage('testtttt');
+    //console.log('before create conv');
+    //const cnv = await conversationsClient.createConversation();    
+    const cnv = await conversationsClient.getConversationBySid("CH6ffef5a5d5be401a8ae12a62a97c76ec");
+    cnv.on('messageAdded', msg => {
+        console.log(`message added`);
+        console.log(Object.keys(msg));
+        console.log(msg.state)
+    })
+    cnv.on('updated', evn => {
+        console.log('updated');
+        console.log(Object.keys(evn));
+        console.log(evn.updateReasons);
+    })
+    try {
+        //await cnv.join();
+    } catch (exc) {
+        console.log(`join error ${exc.message}`);
+    }
+    return;
+    //const sendRes = await cnv.sendMessage('test from conv');
+    const sendRes = await cnv.prepareMessage()
+        .setBody('Hello from conv')
+        .setAttributes({ foo: 'bar' })        
+        .build()
+        .send();
+
+    console.log(sendRes)
+    //console.log(cnv)
+    //console.log('after create conv');
+    //await cnv.sendMessage('testtttt');
     return;
     //conversationsClient.sendMessage('test')
     
@@ -138,7 +180,7 @@ async function testConv(conv) {
     ////await doTwilioPost(`Conversations/${chid}/Messages`, `Author=system&Body=testtest`);
     
     console.log(`send msg`);
-    //await sendTextMsg('4043989999','testtestdata')
+    //await sendTextMsg('#####','testtestdata')
 }
 
 test();
