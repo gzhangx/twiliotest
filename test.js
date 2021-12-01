@@ -4,7 +4,8 @@ const credentials = require('./credentials.json');
 const twilio = require('twilio');
 const AccessToken = require('twilio').jwt.AccessToken;
 const ChatGrant = AccessToken.ChatGrant;
-const twilioConversionsImp1 = require('@twilio/conversations');
+const twilioConversionsImp = require('@twilio/conversations');
+const ConversationsClient = twilioConversionsImp.Client;
 
 const ROOT_URL = 'https://conversations.twilio.com/v1';
 const auth = 'Basic ' + Buffer.from(`${credentials.aid}:${credentials.pwd}`).toString('base64');
@@ -56,8 +57,7 @@ async function getAllMessages(conversions) {
 
 async function testConv(conv) {
     if (!conv) return;
-    const twilioConversionsImp = require('@twilio/conversations');
-    const ConversationsClient = twilioConversionsImp.Client;
+
     const twilioAccountSid = credentials.sid; //'ACxxxxxxxxxx';
     const twilioApiKey = credentials.aid; //'SKxxxxxxxxxx';
     const twilioApiSecret = credentials.pwd;
