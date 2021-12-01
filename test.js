@@ -85,7 +85,7 @@ async function testAll(phone) {
     });
     //const allParts = await conv.getParticipants();
     //console.log(allParts.map(p=>p.state))
-    //if (!tkIdentity)
+    if (!tkIdentity)
     {
         const addPartRes = await conv.addNonChatParticipant(fixPhone(credentials.twilioPhone), fixPhone(phone));
         console.log(`Addpart res=${addPartRes.sid}`);
@@ -107,7 +107,7 @@ async function testAll(phone) {
         //    links: {
         //    conversation: 'https://aim.us1.twilio.com/Client/v2/Services/IS020154fc64564f8aa216d34ee162e4ef/Conversations/CHe79897e3d3d2413689cce65754dbfca6'
         //}
-    //if (!tkIdentity)
+    if (!tkIdentity)
     {
         const addres = await conv.add(tkIdentity);
         console.log(`AddpartToConvo res=${addres.sid}`);
