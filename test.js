@@ -2,7 +2,7 @@ const request = require('superagent');
 const Promise = require('bluebird');
 const credentials = require('./credentials.json');
 const twilio = require('twilio');
-const AccessToken = require('twilio').jwt.AccessToken;
+const AccessToken = twilio.jwt.AccessToken;
 const ChatGrant = AccessToken.ChatGrant;
 const twilioConversionsImp = require('@twilio/conversations');
 const ConversationsClient = twilioConversionsImp.Client;
@@ -16,13 +16,13 @@ async function generateToken(identity) {
     // Used specifically for creating Chat tokens
     //const serviceSid =  //'ISxxxxxxxxxxxxx';
     
-    const chatGrant = new ChatGrant({
+    const chatGrant = new twilio.jwt.AccessToken.ChatGrant({
         serviceSid: serviceSid,
     });
 
     // Create an access token which we will sign and return to the client,
     // containing the grant we just created
-    const token = new AccessToken(
+    const token = new twilio.jwt.AccessToken(
         twilioAccountSid,
         twilioApiKey,
         twilioApiSecret,
@@ -35,7 +35,34 @@ async function generateToken(identity) {
 
 async function testAll() {
     const token = await generateToken('ggtestid');
+    const client = new twilioConversionsImp.Client(token);
     console.log(token);
+    await new Promise(resolve => {
+        client.on('stateChanged', state => {
+            console.log(`client state changed to =>${state}`);
+            if (state === 'initialized') {
+                resolve();
+            }
+        });
+    });
+    console.log('client ready');
+    
+    await (await client.getConversationBySid('CH6ffef5a5d5be401a8ae12a62a97c76ec')).delete()
+    const conv = await client.getConversationByUniqueName('gguniqName') || await client.createConversation({
+        friendlyName: 'ggfreiendlyname',
+        uniqueName: 'gguniqName',
+    });
+    
+    console.log(conv.sid);
+    conv.on('participantJoined', prt => {
+        console.log('partic joined')
+    })
+    conv.on('messageAdded', msg => {
+        console.log('message added');
+        console.log(msg);
+    });
+    await conv.addNonChatParticipant('+'+credentials.twilioPhone, '+1'+credentials.myPhone);
+    
 }
 return testAll();
 const showOldMessages = false;
