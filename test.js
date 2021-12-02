@@ -20,7 +20,18 @@ async function getAllMessages() {
     await Promise.map(r.conversations, async conv => {            
         const serviceSid = conv.chat_service_sid; //'ISxxxxxxxxxxxxx';
         const msgs = await doTwilioGet(`Services/${serviceSid}/Conversations/${conv.sid}/Messages`);
-        console.log(msgs.messages);
+        console.log(msgs.messages.map(m => {
+            return {
+                author: m.author,
+                body: m.body,
+                index: m.index,
+                date_created: m.date_created,
+                sid: m.sid,
+                media: m.media,
+                participant_sid: m.participant_sid,
+                conversation_sid: m.conversation_sid,
+            }
+        }));
     });
 }
 
