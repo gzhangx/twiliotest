@@ -5,6 +5,7 @@
   "main": "test.js",
   "dependencies": {
     "@twilio/conversations": "^2.0.0",
+    "aws-sdk": "^2.1041.0",
     "bluebird": "^3.7.2",
     "superagent": "^6.1.0",
     "twilio": "^3.71.2"
