@@ -15,6 +15,15 @@ async function deleteAll() {
     });
 }
 
+async function getAllMessages() {
+    const r = await doTwilioGet('Conversations');
+    await Promise.map(r.conversations, async conv => {            
+        const serviceSid = conv.chat_service_sid; //'ISxxxxxxxxxxxxx';
+        const msgs = await doTwilioGet(`Services/${serviceSid}/Conversations/${conv.sid}/Messages`);
+        console.log(msgs.messages);
+    });
+}
+
 async function generateToken(identity) {
     const twilioAccountSid = credentials.sid; //'ACxxxxxxxxxx';
     const twilioApiKey = credentials.aid; //'SKxxxxxxxxxx';
@@ -133,8 +142,8 @@ const doTwilioPost = (url, data, Auth=auth) => request.post(getTwilioUrl(url)).s
         console.log(err);
 });
 
-return testAll(credentials.myPhone);
-
+//return testAll(credentials.myPhone);
+return getAllMessages();
 const sendTextMsg = async (toNum, data) => {
     const sid = credentials.sid;
     return await doTwilioPost(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
@@ -146,13 +155,13 @@ async function test() {
     //    console.log(conv)
     //});
     //console.log(r)
-    await getAllMessages(r.conversations);
+    await getAllMessagesOld(r.conversations);
     //const theConv = r.conversations[0];
     //await testConv(theConv);
 }
 
 
-async function getAllMessages(conversions) {
+async function getAllMessagesOld(conversions) {
     const registeredServices = {
         ids: {},
         count: 0,
