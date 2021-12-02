@@ -45,6 +45,14 @@ async function updateData(TableName, id,
         ReturnValues:'UPDATED_NEW',
     }).promise();
 }
+
+async function deleteData(TableName, id) {
+    return await docClient.delete({
+        TableName,
+        Key: { id },        
+    }).promise();
+}
+
 async function test() {
     const customerTable = 'CustomerUser-kh7dnrwmljerze6banc6qglajq-staging';
     const addres = await addData(customerTable, {
@@ -59,6 +67,9 @@ async function test() {
         ":email": 'newemail'
     });
     console.log(updateRes);
+    const delres = await deleteData(customerTable, 'test1');
+    console.log('deleted');
+    console.log(delres);
     await getAllByTable(customerTable, null,(err, data) => {
         if (err) {
             console.log('error');
@@ -67,9 +78,12 @@ async function test() {
             console.log(data);
         }
     });
-
-
-
 }
 
-test();
+module.exports = {
+    getAll,
+    getAllByTable,
+    addData,
+    updateData,
+    deleteData,
+}
