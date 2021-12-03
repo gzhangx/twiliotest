@@ -156,7 +156,7 @@ const doTwilioPost = (url, data, Auth=auth) => request.post(getTwilioUrl(url)).s
         console.log(err);
 });
 
-//return testAll(credentials.myPhone);
+return testAll(credentials.myPhone);
 return getAllMessages(credentials.serviceSid);
 const sendTextMsg = async (toNum, data) => {
     const sid = credentials.sid;
