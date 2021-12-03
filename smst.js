@@ -22,39 +22,43 @@ function mapMessage(m) {
         author: m.author,
         body: m.body,
         index: m.index,
-        timestamp: m.date_created,
+        timestamp: m.dateCreated || m.date_created,
         id: m.sid,
         media: m.media,
         processor: 'twillio',
         source: 'sms',
-        participant_sid: m.participant_sid,
-        conversation_sid: m.conversation_sid,
+        participantSid: m.participantSid || m.participant_sid,
+        conversationSid: m.conversationSid || m.conversation_sid,
     }
 }
 async function getAllMessages(serviceId, onMsgs) {
     const r = await doTwilioGet(`Services/${serviceId}/Conversations`);
-    while (true) {        
-        await Promise.map(r.conversations, async conv => {
+    let res = [];
+    while (true) {
+        const cur = await Promise.map(r.conversations, async conv => {
             //const serviceSid = conv.chat_service_sid; //'ISxxxxxxxxxxxxx';
             //const msgs = await doTwilioGet(`Services/${serviceSid}/Conversations/${conv.sid}/Messages?Order=desc&PageSize=50`);
             //onMsgs(msgs.messages.map(mapMessage));            
             const msgs = await twilioClient.conversations.conversations(conv.sid).messages.page({ order: 'desc', limit: 50, pageNumber: 0 })
             //nextPageUrl, previousPageUrl,instances[]
-            await onMsgs(msgs.instances.map(mapMessage));
+            console.log(msgs.instances[0])
+            return await onMsgs(msgs.instances.map(mapMessage));
         });
+        res = res.concat(cur);
         const nextPageUrl = r.meta.next_page_url
         if (nextPageUrl) {
             console.log(`pagging next ${nextPageUrl}`);
             r = await doTwilioGet(nextPageUrl);
         } else break;
     }
+    return res;
 }
 
 async function generateToken(identity, serviceSid) {
     const twilioAccountSid = accountSid; //'ACxxxxxxxxxx';
     const twilioApiKey = credentials.twilio.aid; //'SKxxxxxxxxxx';
     const twilioApiSecret = credentials.twilio.pwd;
-    
+
     // Used specifically for creating Chat tokens
     //const serviceSid =  //'ISxxxxxxxxxxxxx';
 
@@ -95,7 +99,7 @@ async function checkSms(serviceSid, phone, onMsg) {
                 resolve();
             }
         });
-    });    
+    });
 
     let conv = null;
     let alreadyExists = false;
@@ -178,7 +182,7 @@ const sendTextMsg = async (toNum, data) => {
         `Body=${data}&From=%2B${credentials.twilioPhone}&To=%2B1${toNum}`, sidAuth);
 }
 
-//return getAllMessages(credentials.twilio.serviceSidDontUse, msgs=>console.log(msgs));
+return getAllMessages(credentials.twilio.serviceSidDontUse, msgs => console.log(msgs));
 
 module.exports = {
     sendTextMsg,
