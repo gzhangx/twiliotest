@@ -19,11 +19,25 @@ async function getAll(params, onData) {
     docClient.scan(params, onScan)
 }
 
-async function getAllByTable(TableName, FilterExpression, onData) {
+async function getAllByTable(TableName, FilterExpression, ExpressionAttributeValues, onData) {
     return getAll({
         TableName,
-        FilterExpression
+        FilterExpression,
+        ExpressionAttributeValues,
     }, onData);
+}
+
+async function getOneByName(TableName, name, value) {
+    return new Promise((resolve,reject) => getAll({
+        TableName,
+        FilterExpression: `${name}=:name`,
+        ExpressionAttributeValues: {
+            ':name': value
+        },
+    }, (err, data) => {
+        if (err) reject(err);
+        else resolve(data.Items[0]);
+    }));
 }
 
 async function addData(TableName, Item) {
@@ -70,14 +84,32 @@ async function test() {
     const delres = await deleteData(customerTable, 'test1');
     console.log('deleted');
     console.log(delres);
-    await getAllByTable(customerTable, null,(err, data) => {
+    await getAllByTable(customerTable, null, null,(err, data) => {
         if (err) {
             console.log('error');
             console.log(err);
         } else {
+            console.log('data for cust')
             console.log(data);
         }
     });
+
+    await getAllByTable('BusinessUser-kh7dnrwmljerze6banc6qglajq-staging',
+        'username=:usr', {
+        ':usr': 'ericktest6'
+    }, (err, data) => {
+        if (err) {
+            console.log('errr');
+            console.log(err);
+        } else {
+            console.log('data for bus user');
+            console.log(data);
+        }
+    });
+
+    const getoneres = await getOneByName('BusinessUser-kh7dnrwmljerze6banc6qglajq-staging', 'username', 'ericktest6');
+    console.log('getoneres');
+    console.log(getoneres);
 }
 
 module.exports = {
@@ -86,4 +118,5 @@ module.exports = {
     addData,
     updateData,
     deleteData,
+    getOneByName,
 }
