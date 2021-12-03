@@ -37,9 +37,9 @@ async function getAllMessages(serviceId) {
 }
 
 async function generateToken(identity, serviceSid) {
-    const twilioAccountSid = credentials.sid; //'ACxxxxxxxxxx';
-    const twilioApiKey = credentials.aid; //'SKxxxxxxxxxx';
-    const twilioApiSecret = credentials.pwd;
+    const twilioAccountSid = credentials.twilio.sid; //'ACxxxxxxxxxx';
+    const twilioApiKey = credentials.twilio.aid; //'SKxxxxxxxxxx';
+    const twilioApiSecret = credentials.twilio.pwd;
     
     // Used specifically for creating Chat tokens
     //const serviceSid =  //'ISxxxxxxxxxxxxx';
@@ -114,7 +114,7 @@ async function checkSms(serviceSid, phone, onMsg) {
     //const allParts = await conv.getParticipants();
     //console.log(allParts.map(p=>p.state))
     if (!alreadyExists) {
-        const addPartRes = await conv.addNonChatParticipant(fixPhone(credentials.twilioPhone), fixPhone(phone));
+        const addPartRes = await conv.addNonChatParticipant(fixPhone(credentials.twilio.twilioPhone), fixPhone(phone));
         console.log(`Addpart res=${addPartRes.sid}`);
     }
     //account_sid: 'AC0aa097
@@ -143,8 +143,8 @@ async function checkSms(serviceSid, phone, onMsg) {
 }
 
 const ROOT_URL = 'https://conversations.twilio.com/v1';
-const auth = 'Basic ' + Buffer.from(`${credentials.aid}:${credentials.pwd}`).toString('base64');
-const sidAuth = 'Basic ' + Buffer.from(`${credentials.sid}:${credentials.token}`).toString('base64');
+const auth = 'Basic ' + Buffer.from(`${credentials.twilio.aid}:${credentials.twilio.pwd}`).toString('base64');
+const sidAuth = 'Basic ' + Buffer.from(`${credentials.twilio.sid}:${credentials.twilio.token}`).toString('base64');
 const getTwilioUrl = url => {
     if (url.startsWith('http')) return url;
     return `${ROOT_URL}/${url}`;
@@ -158,14 +158,14 @@ const doTwilioPost = (url, data, Auth = auth) => request.post(getTwilioUrl(url))
         console.log(err);
 });
 
-//return testAll(credentials.myPhone);
-//return getAllMessages(credentials.serviceSid);
+
 const sendTextMsg = async (toNum, data) => {
-    const sid = credentials.sid;
+    const sid = credentials.twilio.sid;
     return await doTwilioPost(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
         `Body=${data}&From=%2B${credentials.twilioPhone}&To=%2B1${toNum}`, sidAuth);
 }
 
+//return getAllMessages(credentials.twilio.serviceSidDontUse);
 
 module.exports = {
     sendTextMsg,
