@@ -29,8 +29,8 @@ function mapMessage(m) {
         conversation_sid: m.conversation_sid,
     }
 }
-async function getAllMessages() {
-    const r = await doTwilioGet('Conversations');
+async function getAllMessages(serviceId) {
+    const r = await doTwilioGet(`Services/${serviceId}/Conversations`);
     await Promise.map(r.conversations, async conv => {            
         const serviceSid = conv.chat_service_sid; //'ISxxxxxxxxxxxxx';
         const msgs = await doTwilioGet(`Services/${serviceSid}/Conversations/${conv.sid}/Messages`);
@@ -157,7 +157,7 @@ const doTwilioPost = (url, data, Auth=auth) => request.post(getTwilioUrl(url)).s
 });
 
 //return testAll(credentials.myPhone);
-return getAllMessages();
+return getAllMessages(credentials.serviceSid);
 const sendTextMsg = async (toNum, data) => {
     const sid = credentials.sid;
     return await doTwilioPost(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
