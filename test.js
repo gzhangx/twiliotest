@@ -20,9 +20,11 @@ function mapMessage(m) {
         author: m.author,
         body: m.body,
         index: m.index,
-        date_created: m.date_created,
-        sid: m.sid,
+        timestamp: m.date_created,
+        id: m.sid,
         media: m.media,
+        processor: 'twillio',
+        source: 'sms',
         participant_sid: m.participant_sid,
         conversation_sid: m.conversation_sid,
     }
