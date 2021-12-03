@@ -5,6 +5,10 @@ const twilioConversionsImp = require('@twilio/conversations');
 
 const credentials = require('./credentials.json');
 
+const accountSid = credentials.twilio.sid;
+const authToken = credentials.twilio.token;
+const twilioClient = require('twilio')(accountSid, authToken);
+
 async function deleteAll() {
     const r = await doTwilioGet('Conversations');
     await Promise.map(r.conversations, async conv => {
@@ -27,17 +31,27 @@ function mapMessage(m) {
         conversation_sid: m.conversation_sid,
     }
 }
-async function getAllMessages(serviceId) {
+async function getAllMessages(serviceId, onMsgs) {
     const r = await doTwilioGet(`Services/${serviceId}/Conversations`);
-    await Promise.map(r.conversations, async conv => {
-        const serviceSid = conv.chat_service_sid; //'ISxxxxxxxxxxxxx';
-        const msgs = await doTwilioGet(`Services/${serviceSid}/Conversations/${conv.sid}/Messages`);
-        console.log(msgs.messages.map(mapMessage));
-    });
+    while (true) {        
+        await Promise.map(r.conversations, async conv => {
+            //const serviceSid = conv.chat_service_sid; //'ISxxxxxxxxxxxxx';
+            //const msgs = await doTwilioGet(`Services/${serviceSid}/Conversations/${conv.sid}/Messages?Order=desc&PageSize=50`);
+            //onMsgs(msgs.messages.map(mapMessage));            
+            const msgs = await twilioClient.conversations.conversations(conv.sid).messages.page({ order: 'desc', limit: 50, pageNumber: 0 })
+            //nextPageUrl, previousPageUrl,instances[]
+            await onMsgs(msgs.instances.map(mapMessage));
+        });
+        const nextPageUrl = r.meta.next_page_url
+        if (nextPageUrl) {
+            console.log(`pagging next ${nextPageUrl}`);
+            r = await doTwilioGet(nextPageUrl);
+        } else break;
+    }
 }
 
 async function generateToken(identity, serviceSid) {
-    const twilioAccountSid = credentials.twilio.sid; //'ACxxxxxxxxxx';
+    const twilioAccountSid = accountSid; //'ACxxxxxxxxxx';
     const twilioApiKey = credentials.twilio.aid; //'SKxxxxxxxxxx';
     const twilioApiSecret = credentials.twilio.pwd;
     
@@ -144,7 +158,7 @@ async function checkSms(serviceSid, phone, onMsg) {
 
 const ROOT_URL = 'https://conversations.twilio.com/v1';
 const auth = 'Basic ' + Buffer.from(`${credentials.twilio.aid}:${credentials.twilio.pwd}`).toString('base64');
-const sidAuth = 'Basic ' + Buffer.from(`${credentials.twilio.sid}:${credentials.twilio.token}`).toString('base64');
+const sidAuth = 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64');
 const getTwilioUrl = url => {
     if (url.startsWith('http')) return url;
     return `${ROOT_URL}/${url}`;
@@ -160,12 +174,11 @@ const doTwilioPost = (url, data, Auth = auth) => request.post(getTwilioUrl(url))
 
 
 const sendTextMsg = async (toNum, data) => {
-    const sid = credentials.twilio.sid;
-    return await doTwilioPost(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,
+    return await doTwilioPost(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
         `Body=${data}&From=%2B${credentials.twilioPhone}&To=%2B1${toNum}`, sidAuth);
 }
 
-//return getAllMessages(credentials.twilio.serviceSidDontUse);
+//return getAllMessages(credentials.twilio.serviceSidDontUse, msgs=>console.log(msgs));
 
 module.exports = {
     sendTextMsg,
