@@ -126,7 +126,7 @@ async function checkSms(serviceSid, phone, onMsg) {
             console.log(`message added ${phone}`);
             //console.log(msg); //conversation,  state
             console.log(`${msg.state.author}: ${msg.state.timestamp} ${msg.state.subject || ''} ${msg.state.body}`)
-            onMsg(msg);
+            onMsg(mapMessage(msg));
         });
     }
     //const allParts = await conv.getParticipants();
@@ -182,7 +182,11 @@ const sendTextMsg = async (toNum, data) => {
         `Body=${data}&From=%2B${credentials.twilioPhone}&To=%2B1${toNum}`, sidAuth);
 }
 
+return checkSms(credentials.twilio.serviceSidDontUse, '4043989999', msg => {
+    console.log(msg);
+})
 return getAllMessages(credentials.twilio.serviceSidDontUse, msgs => console.log(msgs));
+
 
 module.exports = {
     sendTextMsg,
